@@ -44,7 +44,7 @@ class FN_IRCClient(irc.server.IRCClient):
 
 
 class IRCListener(listener.FakeNetBaseListener):
-    def __init__(self, config = {}, logging_level = logging.DEBUG, name=None):
+    def __init__(self, config = {}, logging_level = logging.DEBUG, name = None):
         listener.FakeNetBaseListener.__init__(self, config, logging_level, name)
         logging.getLogger('irc.server').setLevel(logging.CRITICAL+1)
 
@@ -60,6 +60,7 @@ class IRCListener(listener.FakeNetBaseListener):
         if self.server:
             self.server.shutdown()
             self.server.server_close()
+
 
 if __name__ == '__main__':
     listener.run_standalone(IRCListener)
