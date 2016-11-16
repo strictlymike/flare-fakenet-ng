@@ -64,4 +64,3 @@ class IRCListener(listener.FakeNetBaseListener):
 
 if __name__ == '__main__':
     listener.run_standalone(IRCListener)
-
