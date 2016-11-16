@@ -37,6 +37,7 @@ class FakeNetBaseListener(object):
     def stop(self):
         self.logger.info('Stopping...')
 
+
 def run_standalone(class_, config = {}):
     logging.basicConfig(format='%(asctime)s [%(name)15s] %(message)s', datefmt='%m/%d/%y %I:%M:%S %p', level=logging.DEBUG)
     listener = class_(config)

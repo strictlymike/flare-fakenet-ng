@@ -4,8 +4,6 @@ import irc.client
 import listener
 import threading
 
-logger = None
-
 class FN_IRCClient(irc.server.IRCClient):
     def _handle_incoming(self):
         """Only difference here is that we want to see the line before it gets
