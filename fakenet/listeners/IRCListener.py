@@ -60,6 +60,7 @@ class IRCListener(listener.FakeNetBaseListener):
         if self.server:
             self.server.shutdown()
             self.server.server_close()
+            self.server = None
 
 
 if __name__ == '__main__':
