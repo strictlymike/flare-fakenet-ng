@@ -5,7 +5,7 @@ import time
 class FakeNetBaseListener(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, config = {}, logging_level = logging.DEBUG, name = None):
+    def __init__(self, config = {}, name = None, logging_level = logging.DEBUG):
         name = name if name is not None else self.getclassname()
 
         self.logger = logging.getLogger(name)
@@ -16,8 +16,6 @@ class FakeNetBaseListener(object):
         self.local_ip = '0.0.0.0'
         self.server = None
         self.server_thread = None
-
-        self.logger.info('Instantiating...')
 
         self.logger.debug('Initialized with config:')
         for key, value in config.iteritems():
