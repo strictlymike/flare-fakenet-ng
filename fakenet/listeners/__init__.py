@@ -11,5 +11,6 @@ __all__ = [
     'IRCListener',
     'FTPListener',
     'FingerListener',
+    'EchoListener',
 ]
 
