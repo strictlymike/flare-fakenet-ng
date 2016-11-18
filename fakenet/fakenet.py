@@ -10,6 +10,7 @@ import logging
 import os
 import sys
 import time
+import threading
 
 from collections import OrderedDict
 
@@ -52,6 +53,9 @@ class Fakenet():
 
         # List of running listener providers
         self.running_listener_providers = list()
+
+        # Whether to call reactor.run() / reactor.stop()
+        self.need_twisted_reactor = []
 
     def parse_config(self, config_filename):
 
@@ -135,6 +139,9 @@ class Fakenet():
                 # Listener provider object
                 listener_provider_instance = listener_provider(listener_config, listener_name, self.logging_level)
 
+                if self._listener_needs_twisted(listener_provider_instance):
+                    self.need_twisted_reactor.append(listener_name)
+
                 # Store listener provider object
                 self.running_listener_providers.append(listener_provider_instance)
 
@@ -148,10 +155,40 @@ class Fakenet():
         # Start the diverter
         if self.diverter:
             self.diverter.start()
-        
+
+        # Start Twisted reactor once and only once, if required
+        if len(self.need_twisted_reactor):
+            try:
+                from twisted.internet import reactor
+                import twisted.internet.threads as ti_threads
+                t = threading.Thread(target=self._thread_reactor_nosig)
+                t.start()
+            except ImportError:
+                self.logger.error('Cannot import twisted.internet.reactor needed by %s' % ', '.join(self.need_twisted_reactor))
+                self.need_twisted_reactor = []
+
+    def _listener_needs_twisted(self, instance):
+        return getattr(instance, 'needs_twisted_reactor', False)
+
+    def _thread_reactor_nosig(self):
+        from twisted.internet import reactor
+        self.logger.info('Starting Twisted reactor...')
+        # Specifying installSignalHandlers=0 to keep cleanup code centralized
+        # in the stop() routine. If the installSignalHandlers argument is not
+        # cleared, the reactor will install a KeyboardInterrupt signal handler
+        # and the reactor will speak out of turn when the user hits Ctrl+C /
+        # Ctrl+Break.
+        reactor.run(installSignalHandlers=0)
+
     def stop(self):
 
         self.logger.info("Stopping...")
+
+        if len(self.need_twisted_reactor):
+            from twisted.internet import reactor
+            import twisted.internet.threads as ti_threads
+            self.logger.info('Stopping Twisted reactor...')
+            ti_threads.blockingCallFromThread(reactor, reactor.stop)
 
         for running_listener_provider in self.running_listener_providers:
             running_listener_provider.stop()
