@@ -2,6 +2,13 @@ import logging
 import abc
 import time
 
+# Twisted's reactor must be called once and only once, so to facilitate
+# listeners that may use Twisted, FakeNet will check for and evaluate the
+# attribute needs_twisted_reactor in each listener class and, if true, will
+# import the appropriate modules and start reactor.
+class TwistedMixIn(object):
+    needs_twisted_reactor = True
+
 class FakeNetBaseListener(object):
     __metaclass__ = abc.ABCMeta
 
