@@ -50,7 +50,8 @@ class IRCListener(listener.FakeNetBaseListener):
 
     def start(self):
         listener.FakeNetBaseListener.start(self)
-        self.server = irc.server.IRCServer(('127.0.0.1', 6667), FN_IRCClient)
+        portno = int(self.config.get('port', 6667))
+        self.server = irc.server.IRCServer(('127.0.0.1', portno), FN_IRCClient)
         self.server.logger = self.logger
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.start()
