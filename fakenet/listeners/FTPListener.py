@@ -72,7 +72,6 @@ class FTPListener(listener.FakeNetBaseListener, listener.TwistedMixIn):
         listener.FakeNetBaseListener.start(self)
 
         self.server = FakeNetFTPFactory(self.portal)
-        # self.server = ftp.FTPFactory(self.portal)
         self.server.logger = self.logger
         reactor.listenTCP(int(self.config.get('port', 21)), self.server)
 
