@@ -46,22 +46,32 @@ class FN_IRCClient(irc.server.IRCClient):
 class IRCListener(listener.FakeNetBaseListener):
     def __init__(self, config = {}, name = None, logging_level = logging.DEBUG):
         listener.FakeNetBaseListener.__init__(self, config, name, logging_level)
+
         logging.getLogger('irc.server').setLevel(logging.CRITICAL+1)
+        self.server = None
+        self.server_thread = None
 
     def start(self):
         listener.FakeNetBaseListener.start(self)
-        portno = int(self.config.get('port', 6667))
-        self.server = irc.server.IRCServer(('127.0.0.1', portno), FN_IRCClient)
+
+        endpoint = (self.local_ip, self.getportno(6667))
+
+        self.server = irc.server.IRCServer(endpoint, FN_IRCClient)
         self.server.logger = self.logger
+
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.start()
+        self.started = True
 
     def stop(self):
         listener.FakeNetBaseListener.stop(self)
-        if self.server:
+        if self.started and self.server and self.server_thread:
             self.server.shutdown()
             self.server.server_close()
             self.server = None
+
+            self.server_thread.join()
+            self.server_thread = None
 
 
 if __name__ == '__main__':

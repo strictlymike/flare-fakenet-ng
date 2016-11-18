@@ -22,11 +22,13 @@ class FakeNetBaseListener(object):
         self.name = name
         self.local_ip = '0.0.0.0'
         self.server = None
-        self.server_thread = None
+        self.started = False
 
         self.logger.debug('Initialized with config:')
         for key, value in config.iteritems():
             self.logger.debug('  %10s: %s', key, value)
+
+    def getportno(self, default): return int(self.config.get('port', default))
 
     def getclassname(self):
         name = type(self).__name__
@@ -41,6 +43,13 @@ class FakeNetBaseListener(object):
     @abc.abstractmethod
     def stop(self):
         self.logger.info('Stopping...')
+
+    def config_present(self, opt): return opt.lower() in self.config.keys()
+    def config_true(self, opt): return 'yes' == self.config[opt.lower()].lower()
+    def config_false(self, opt): return 'false' == self.config[opt.lower()].lower()
+    def config_true_safe(self, opt):
+        return self.config_true(opt) if self.config_present(opt.lower()) else False
+    def config_false_safe(self, opt): return not self.config_true_safe(opt)
 
 
 def run_standalone(class_, config = {}):

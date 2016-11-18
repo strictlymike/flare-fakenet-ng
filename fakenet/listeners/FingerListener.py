@@ -9,12 +9,7 @@ class FakeNetFinger(Finger):
     def forwardQuery(self, slash_w, user, host):
         Finger.forwardQuery(self, slash_w, user, host)
         self.logger.info(
-            'Forward query slash_w %s user %s host %s' % (
-                slash_w,
-                user,
-                host
-               )
-           )
+            'Forward query slash_w %s user %s host %s' % (slash_w, user, host))
 
     def getDomain(self, slash_w):
         Finger.getDomain(self, slash_w)
@@ -24,12 +19,7 @@ class FakeNetFinger(Finger):
 
     def getUser(self, slash_w, user):
         Finger.getUser(self, slash_w, user)
-        self.logger.info(
-            'Get user slash_w %s user %s' % (
-                slash_w,
-                user
-               )
-           )
+        self.logger.info('Get user slash_w %s user %s' % (slash_w, user))
 
 
 class FingerFactory(protocol.Factory):
@@ -45,14 +35,13 @@ class FingerListener(listener.FakeNetBaseListener, listener.TwistedMixIn):
     def start(self):
         listener.FakeNetBaseListener.start(self)
 
-        self.server = FingerFactory()
-        self.server.logger = self.logger
-        reactor.listenTCP(int(self.config.get('port', 79)), self.server)
+        f = FingerFactory()
+        f.logger = self.logger
+        reactor.listenTCP(self.getportno(79), f)
 
     def stop(self):
         listener.FakeNetBaseListener.stop(self)
-        if not self.server is None:
-            self.server = None
+        # TwistedMixIn will induce FakeNet to call reactor.stop() for us
 
 
 if __name__ == '__main__':

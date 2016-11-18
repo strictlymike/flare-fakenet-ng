@@ -70,16 +70,14 @@ class FTPListener(listener.FakeNetBaseListener, listener.TwistedMixIn):
 
     def start(self):
         listener.FakeNetBaseListener.start(self)
-        portno = int(self.config.get('port', 21))
 
-        self.server = FakeNetFTPFactory(self.portal)
-        self.server.logger = self.logger
-        reactor.listenTCP(portno, self.server)
+        f = FakeNetFTPFactory(self.portal)
+        f.logger = self.logger
+        reactor.listenTCP(self.getportno(21), f)
 
     def stop(self):
         listener.FakeNetBaseListener.stop(self)
-        if not self.server is None:
-            self.server = None
+        # TwistedMixIn will induce FakeNet to call reactor.stop() for us
 
 
 if __name__ == '__main__':
