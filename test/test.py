@@ -1,4 +1,5 @@
 import dns.resolver
+import ftplib
 import hashlib
 import httplib
 import irc.client
@@ -7,6 +8,7 @@ import random
 import smtplib
 import socket
 import string
+import time
 import urllib
 
 logger = logging.getLogger(__name__)
@@ -139,22 +141,40 @@ def test_smtp():
 # IRC
 ###############################################################################
 
-def _util_irc(nm, hostname, port, nick, privmsgs):
+def _util_irc(nm, hostname, port, nick, callback):
     c = irc.client.Reactor()
-    s = c.server()
-    s.connect(hostname, port, nick)
-    for (nick, msg) in privmsgs:
-        s.privmsg(nick, msg)
-    s.close()
+    srv = c.server()
+    srv.connect(hostname, port, nick)
+    callback(srv)
+    srv.close()
+
+def _callback_test_irc(srv):
+    srv.privmsg('#evil_bartenders', 'Black Market')
+    srv.process_data()
+    srv.privmsg('inspector_clouseau', "I'm looking for a safe house.")
+    srv.process_data()
+    srv.join('#whatever')
+    srv.process_data()
+    srv.ping('xi_jin')
+    srv.process_data()
+    # time.sleep(0.1)
+    srv.quit()
+    srv.process_data()
+
+    # Looking for other commands that should cause a response to be returned,
+    # ideally commands that will raise an exception if one is not.
 
 def test_irc():
     nm = test_irc.__name__
-    privmsgs = [
-        ['#evil_bartenders', 'Black Market'],
-        ['inspector_clouseau', "I'm looking for a safe house."],
-    ]
-    _util_irc(nm, HOSTNAME, 6667, 'dr_evil', privmsgs)
+    _util_irc(nm, HOSTNAME, 6667, 'dr_evil', _callback_test_irc)
 
+###############################################################################
+# FTP
+###############################################################################
+
+def test_ftp():
+    nm = test_ftp.__name__
+    raise Exception('Test not implemented')
 
 ###############################################################################
 # 1337 (raw TCP)
@@ -164,10 +184,10 @@ def _util_raw_expect_same_back(nm, ipaddr, port, data, secure=False):
     if secure:
         raise Exception('secure raw socket util not yet implemented')
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect( (ipaddr, port) )
-    s.send(data)
-    r = s.recv(1024)
+    sk = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sk.connect( (ipaddr, port) )
+    sk.send(data)
+    r = sk.recv(1024)
     assert r == data
 
 def test_1337():
