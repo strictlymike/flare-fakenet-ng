@@ -10,6 +10,7 @@ import logging
 import os
 import sys
 import time
+import netifaces
 import threading
 
 from collections import OrderedDict
@@ -94,7 +95,13 @@ class Fakenet():
         if self.fakenet_config.get('diverttraffic') and self.fakenet_config['diverttraffic'].lower() == 'yes':
 
             # Select platform specific diverter
-            if platform.system() == 'Windows':
+            platform_name = platform.system()
+
+            ip_addrs = dict()
+            ip_addrs[4] = get_ips([4])  # Get IPv4 addrs
+            ip_addrs[6] = get_ips([6])  # Get IPv6 addrs
+
+            if platform_name == 'Windows':
 
                 # Check Windows version
                 if platform.release() in ['2000', 'XP', '2003Server', 'post2003']:
@@ -107,12 +114,15 @@ class Fakenet():
                     self.logger.error('Error: Please install 64-bit Python interpreter to support diverter functions.')
                     sys.exit(1)
 
-
                 from diverters.windows import Diverter
                 self.diverter = Diverter(self.diverter_config, self.listeners_config, self.logging_level)
 
+            elif platform_name.lower().startswith('linux'):
+                from diverters.linux import Diverter
+                self.diverter = Diverter(self.diverter_config, self.listeners_config, ip_addrs, self.logging_level)
+
             else:
-                self.logger.error('Error: Your system %s is currently not supported.', platform.system())
+                self.logger.error('Error: Your system %s is currently not supported.', platform_name)
                 sys.exit(1)
 
 
@@ -197,6 +207,34 @@ class Fakenet():
             self.diverter.stop()
 
         sys.exit(0)
+
+def get_ips(ipvers):
+    """Return IP addresses bound to local interfaces including loopbacks.
+    
+    Parameters
+    ----------
+    ipvers : list
+        IP versions desired (4, 6, or both); ensures the netifaces semantics
+        (e.g. netiface.AF_INET) are localized to this function.
+    """
+    specs = []
+    results = []
+
+    for ver in ipvers:
+        if ver == 4:
+            specs.append(netifaces.AF_INET)
+        elif ver == 6:
+            specs.append(netifaces.AF_INET6)
+        else:
+            raise ValueError('get_ips only supports IP versions 4 and 6')
+
+    for iface in netifaces.interfaces():
+        for spec in specs:
+            for link in netifaces.ifaddresses(iface)[spec]:
+                if 'addr' in link:
+                    results.append(link['addr'])
+
+    return results
 
 def main():
 
